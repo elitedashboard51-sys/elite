@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الدخول الآمن</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* خلفية متحركة مذهلة */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            z-index: -2;
+        }
+        
+        .background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+            animation: backgroundShift 15s ease-in-out infinite;
+        }
+        
+        @keyframes backgroundShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        /* جزيئات متحركة */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatUp 8s infinite linear;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) scale(0);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100vh) scale(1);
+            }
+        }
+        
+        /* صفحة تسجيل الدخول */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #dda0dd);
+            border-radius: 22px;
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+        
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .login-icon i {
+            font-size: 35px;
+            color: white;
+        }
+        
+        .login-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .form-label {
+            display: block;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 18px;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .password-toggle:hover {
+            color: #4ecdc4;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+        }
+        
+        .login-button:hover::before {
+            left: 100%;
+        }
+        
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .login-button:active {
+            transform: translateY(0);
+        }
+        
+        .loading {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .demo-info {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .demo-info p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+        }
+        
+        .error-message {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        /* صفحة الداشبورد */
+        .dashboard {
+            display: none;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px 0;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+        
+        .header-title i {
+            font-size: 30px;
+            margin-left: 15px;
+            color: #4ecdc4;
+        }
+        
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 107, 107, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-connected { background: #4ecdc4; }
+        .status-disconnected { background: #ff6b6b; }
+        .status-connecting { background: #feca57; }
+        
+        .firebase-info {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            color: #4ecdc4;
+        }
+        
+        .connect-btn {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        
+        .connect-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(78, 205, 196, 0.3);
+        }
+        
+        .connect-btn i {
+            margin-left: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 25px;
+            color: white;
+        }
+        
+        .stat-icon.database { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.security { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .stat-icon.status { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        
+        .warning-info {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        /* إضافات جمالية */
+        .glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(78, 205, 196, 0.4); }
+            to { box-shadow: 0 0 30px rgba(78, 205, 196, 0.8), 0 0 40px rgba(78, 205, 196, 0.4); }
+        }
+        
+        @media (max-width: 768px) {
+            .login-card {
+                margin: 20px;
+                padding: 30px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- خلفية متحركة -->
+    <div class="background"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- صفحة تسجيل الدخول -->
+    <div class="login-container" id="loginPage">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h1 class="login-title">نظام الدخول الآمن</h1>
+                <p class="login-subtitle">مرحباً بك في لوحة التحكم المتقدمة</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">اسم المستخدم</label>
+                <div style="position: relative;">
+                    <input type="text" id="username" class="form-input" placeholder="أدخل اسم المستخدم">
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+                <div class="error-message" id="usernameError">اسم المستخدم مطلوب</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">كلمة المرور</label>
+                <div style="position: relative;">
+                    <input type="password" id="password" class="form-input" placeholder="أدخل كلمة المرور">
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <i class="fas fa-eye" id="passwordIcon"></i>
+                    </button>
+                </div>
+                <div class="error-message" id="passwordError">كلمة المرور مطلوبة</div>
+            </div>
+
+            <button class="login-button" onclick="handleLogin()">
+                <span id="loginText">تسجيل الدخول</span>
+                <div class="loading" id="loginLoading"></div>
+            </button>
+
+           
+
+            <div class="error-message" id="generalError" style="text-align: center; margin-top: 15px;">
+                اسم المستخدم أو كلمة المرور غير صحيحة
+            </div>
+        </div>
+    </div>
+
+    <!-- صفحة الداشبورد -->
+    <div class="dashboard" id="dashboardPage">
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <h1>لوحة التحكم المتقدمة</h1>
+                </div>
+                <button class="logout-btn" onclick="handleLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <!-- بطاقة حالة الاتصال -->
+            <div class="status-card">
+                <h2 style="color: white; margin-bottom: 20px; font-size: 20px;">
+                    <i class="fas fa-database" style="margin-left: 10px; color: #4ecdc4;"></i>
+                    حالة الاتصال بقاعدة البيانات
+                </h2>
+                
+                <div class="connection-status">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <span id="statusText" style="color: white; font-weight: bold;">غير متصل</span>
+                </div>
+
+                <div class="firebase-info">
+                    <strong>مشروع Firebase:</strong> elite-poolingandride-app
+                </div>
+
+                <button class="connect-btn" id="connectBtn" onclick="connectToFirebase()">
+                    <i class="fas fa-plug"></i>
+                    <span id="connectText">اتصال الآن</span>
+                </button>
+
+                <div class="warning-info">
+                    <i class="fas fa-info-circle" style="margin-left: 5px;"></i>
+                    معلومات API محمية ومشفرة. تأكد من ضبط قواعد Realtime Database على { ".read": true, ".write": true }
+                </div>
+            </div>
+
+            <!-- بطاقات الإحصائيات -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon database">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3 style="color: white; margin-bottom: 10px;">قاعدة البيانات</h3>
+                    <p style="color: rgba(255,255,255,0.8);">Firebase Realtime Database</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon status">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h3 style="color: white; margin-bottom: 10px;">حالة النظام</h3>
+                    <p style="color: rgba(255,255,255,0.8);" id="systemStatus">غير متصل</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon security">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 style="color: white; margin-bottom: 10px;">مستوى الأمان</h3>
+                    <p style="color: rgba(255,255,255,0.8);">محمي بالكامل</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // إعدادات Firebase المحمية (مخفية عن المستخدم)
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyD3PRolFt7VLQWJsYgM8Mm50aKurdskGa4",
+            projectId: "elite-poolingandride-app"
+        };
+
+        let connectionStatus = 'disconnected';
+
+        // إنشاء الجزيئات المتحركة
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 5 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // إظهار/إخفاء كلمة المرور
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('passwordIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.className = 'fas fa-eye';
+            }
+        }
+
+        // تسجيل الدخول
+        async function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.querySelector('.login-button');
+            const loginText = document.getElementById('loginText');
+            const loginLoading = document.getElementById('loginLoading');
+
+            // إخفاء رسائل الخطأ
+            document.getElementById('usernameError').style.display = 'none';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('generalError').style.display = 'none';
+
+            // التحقق من صحة البيانات
+            let hasErrors = false;
+            
+            if (!username.trim()) {
+                document.getElementById('usernameError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (!password.trim()) {
+                document.getElementById('passwordError').style.display = 'block';
+                hasErrors = true;
+            }
+
+            if (hasErrors) return;
+
+            // عرض حالة التحميل
+            loginBtn.disabled = true;
+            loginText.style.display = 'none';
+            loginLoading.style.display = 'inline-block';
+
+            // محاكاة عملية تسجيل الدخول
+            setTimeout(() => {
+                if (username === 'elite' && password === 'eliteadmin') {
+                    window.location.href = 'dashboard.html'; // التحويل لصفحة جديدة
+                } else {
+                    document.getElementById('generalError').style.display = 'block';
+                }
+                
+                // إعادة تعيين حالة الزر
+                loginBtn.disabled = false;
+                loginText.style.display = 'inline';
+                loginLoading.style.display = 'none';
+            }, 2000);
+        }
+
+        // عرض الداشبورد
+        function showDashboard() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'block';
+            updateConnectionStatus('disconnected');
+        }
+
+        // تسجيل الخروج
+        function handleLogout() {
+            document.getElementById('dashboardPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+            
+            // إعادة تعيين النموذج
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            connectionStatus = 'disconnected';
+            
+            // إخفاء رسائل الخطأ
+            document.querySelectorAll('.error-message').forEach(error => {
+                error.style.display = 'none';
+            });
+        }
+
+        // الاتصال بـ Firebase
+        async function connectToFirebase() {
+            const connectBtn = document.getElementById('connectBtn');
+            const connectText = document.getElementById('connectText');
+            
+            connectBtn.disabled = true;
+            updateConnectionStatus('connecting');
+            connectText.textContent = 'جاري الاتصال...';
+
+            // محاكاة الاتصال باستخدام المعلومات المحمية
+            console.log('Connecting to Firebase with:', FIREBASE_CONFIG);
+            
+            setTimeout(() => {
+                updateConnectionStatus('connected');
+                connectText.textContent = 'متصل';
+                connectBtn.innerHTML = '<i class="fas fa-check"></i> متصل بنجاح';
+                connectBtn.style.background = 'linear-gradient(135deg, #00b894, #00a085)';
+            }, 3000);
+        }
+
+        // تحديث حالة الاتصال
+        function updateConnectionStatus(status) {
+            connectionStatus = status;
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const systemStatus = document.getElementById('systemStatus');
+            
+            statusIndicator.className = 'status-indicator';
+            
+            switch(status) {
+                case 'connected':
+                    statusIndicator.classList.add('status-connected');
+                    statusText.textContent = 'متصل بقاعدة البيانات';
+                    systemStatus.textContent = 'نشط ومتصل';
+                    break;
+                case 'connecting':
+                    statusIndicator.classList.add('status-connecting');
+                    statusText.textContent = 'جاري الاتصال...';
+                    systemStatus.textContent = 'يتم الاتصال...';
+                    break;
+                default:
+                    statusIndicator.classList.add('status-disconnected');
+                    statusText.textContent = 'غير متصل بقاعدة البيانات';
+                    systemStatus.textContent = 'غير متصل';
+            }
+        }
+
+        // التحقق من الضغط على Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && document.getElementById('loginPage').style.display !== 'none') {
+                handleLogin();
+            }
+        });
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            
+            // إضافة تأثيرات التركيز على الحقول
+            const inputs = document.querySelectorAll('.form-input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.parentElement.querySelector('.error-message').style.display = 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

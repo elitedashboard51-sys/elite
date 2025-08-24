@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'arabic': ['Cairo', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            font-family: 'Cairo', Arial, sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .pulse-green {
+            animation: pulseGreen 2s infinite;
+        }
+        @keyframes pulseGreen {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-arabic">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-taxi text-3xl text-indigo-600"></i>
+                        <h1 class="text-2xl font-bold text-gray-800">Elite Dasboard</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="connectionStatus" class="flex items-center space-x-2 bg-red-100 px-3 py-2 rounded-lg">
+                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span class="text-red-700 font-medium">غير متصل</span>
+                    </div>
+                    <button id="connectBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plug ml-2"></i>
+                        اتصال
+                    </button>
+                    <button id="refreshBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-sync-alt ml-2"></i>
+                        تحديث
+                    </button>
+                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-sign-out-alt ml-2"></i>
+                        تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-xl text-white card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100">إجمالي السائقين</p>
+                        <h3 id="totalDrivers" class="text-3xl font-bold">0</h3>
+                    </div>
+                    <div class="bg-blue-400 p-3 rounded-lg">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-xl text-white card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100">السائقون المتصلون</p>
+                        <h3 id="onlineDrivers" class="text-3xl font-bold">0</h3>
+                    </div>
+                    <div class="bg-green-400 p-3 rounded-lg">
+                        <i class="fas fa-car text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-yellow-500 to-orange-500 p-6 rounded-xl text-white card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-yellow-100">طلبات الرحلات</p>
+                        <h3 id="totalRequests" class="text-3xl font-bold">0</h3>
+                    </div>
+                    <div class="bg-yellow-400 p-3 rounded-lg">
+                        <i class="fas fa-route text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-6 rounded-xl text-white card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100">إجمالي الأرباح</p>
+                        <h3 id="totalEarnings" class="text-3xl font-bold">0</h3>
+                        <p class="text-xs text-purple-100">ليرة سورية</p>
+                    </div>
+                    <div class="bg-purple-400 p-3 rounded-lg">
+                        <i class="fas fa-money-bill-wave text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- Live Drivers -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">السائقون المتصلون مباشرة</h2>
+                    <div class="flex space-x-2">
+                        <div id="liveIndicator" class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600">مباشر</span>
+                    </div>
+                </div>
+                <div id="liveDriversList" class="space-y-3 max-h-96 overflow-y-auto">
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-plug text-4xl mb-4"></i>
+                        <p>اضغط على زر الاتصال لعرض السائقين المتصلين</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ride Requests -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">طلبات الرحلات الأخيرة</h2>
+                <div id="rideRequestsList" class="space-y-3 max-h-96 overflow-y-auto">
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-route text-3xl mb-4"></i>
+                        <p>لا توجد طلبات حالياً</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Drivers Table -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">إدارة جميع السائقين</h2>
+                <div class="flex space-x-4">
+                    <input type="text" id="searchDriver" placeholder="البحث عن سائق..." 
+                           class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500">
+                    <select id="filterCarType" class="border border-gray-300 rounded-lg px-4 py-2">
+                        <option value="">جميع السيارات</option>
+                        <option value="CarX">CarX</option>
+                        <option value="CarXL">CarXL</option>
+                        <option value="CarSUV">CarSUV</option>
+                        <option value="SportsCar">SportsCar</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم السائق</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">معلومات السيارة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الهاتف</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driversTableBody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fas fa-database text-3xl mb-4"></i>
+                                <p>اضغط على زر الاتصال لعرض السائقين</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">توزيع أنواع السيارات</h2>
+                <canvas id="carTypesChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">إحصائيات الحالة</h2>
+                <canvas id="statusChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple Connection Modal (No Firebase Config Display) -->
+    <div id="connectionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="bg-indigo-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-database text-3xl text-indigo-600"></i>
+                </div>
+                
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">الاتصال بقاعدة البيانات</h3>
+                <p class="text-gray-600 mb-8">جاري تهيئة الاتصال الآمن بقاعدة البيانات...</p>
+                
+                <button id="connectFirebase" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-all shadow-lg hover:shadow-xl">
+                    <i class="fas fa-link ml-2"></i>
+                    <span id="connectText">بدء الاتصال</span>
+                </button>
+                
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-700 flex items-center justify-center">
+                        <i class="fas fa-shield-alt ml-2"></i>
+                        اتصال آمن ومشفر
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Modern Firebase v9+ imports
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getDatabase, ref, onValue, off } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+        // معلومات Firebase محمية (مخفية عن المستخدم)
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyD3PRolFt7VLQWJsYgM8Mm50aKurdskGa4",
+            projectId: "elite-poolingandride-app",
+            databaseURL: "https://elite-poolingandride-app-default-rtdb.firebaseio.com"
+        };
+
+        // Global variables
+        let app, database;
+        let isConnected = false;
+        let listenersMap = new Map();
+
+        // DOM Elements
+        const connectBtn = document.getElementById('connectBtn');
+        const connectFirebaseBtn = document.getElementById('connectFirebase');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const connectionModal = document.getElementById('connectionModal');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const liveIndicator = document.getElementById('liveIndicator');
+        const connectText = document.getElementById('connectText');
+
+        // Initialize charts
+        let carTypesChart, statusChart;
+        initializeCharts();
+
+        // Event Listeners
+        connectBtn.addEventListener('click', () => {
+            connectionModal.style.display = 'flex';
+        });
+
+        connectFirebaseBtn.addEventListener('click', connectToFirebase);
+        refreshBtn.addEventListener('click', refreshData);
+
+        // Close modal on outside click (only if connected)
+        connectionModal.addEventListener('click', (e) => {
+            if (e.target === connectionModal && isConnected) {
+                connectionModal.style.display = 'none';
+            }
+        });
+
+        // Connect to Firebase using protected credentials
+        async function connectToFirebase() {
+            try {
+                // Show loading state
+                connectFirebaseBtn.disabled = true;
+                connectText.textContent = 'جاري الاتصال...';
+                connectFirebaseBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الاتصال...';
+
+                // Initialize Firebase with protected config
+                app = initializeApp(FIREBASE_CONFIG);
+                database = getDatabase(app);
+
+                // Test connection
+                const testRef = ref(database, '.info/connected');
+                const unsubscribe = onValue(testRef, (snapshot) => {
+                    const connected = snapshot.val();
+                    if (connected === true) {
+                        isConnected = true;
+                        updateConnectionStatus(true);
+                        connectionModal.style.display = 'none';
+                        startDataListening();
+                        showNotification('تم الاتصال بنجاح!', 'success');
+                    }
+                }, (error) => {
+                    console.error('Connection error:', error);
+                    showNotification('فشل في الاتصال، يرجى المحاولة مرة أخرى', 'error');
+                    resetConnectButton();
+                });
+
+                // Connection timeout
+                setTimeout(() => {
+                    if (!isConnected) {
+                        showNotification('انتهت مهلة الاتصال، يرجى المحاولة مرة أخرى', 'error');
+                        resetConnectButton();
+                    }
+                }, 10000);
+
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+                showNotification('خطأ في النظام، يرجى المحاولة لاحقاً', 'error');
+                resetConnectButton();
+            }
+        }
+
+        // Reset connect button to initial state
+        function resetConnectButton() {
+            connectFirebaseBtn.disabled = false;
+            connectFirebaseBtn.innerHTML = '<i class="fas fa-link ml-2"></i> إعادة المحاولة';
+            updateConnectionStatus(false);
+        }
+
+        // Update connection status UI
+        function updateConnectionStatus(connected) {
+            if (connected) {
+                connectionStatus.innerHTML = `
+                    <div class="w-3 h-3 bg-green-500 rounded-full pulse-green"></div>
+                    <span class="text-green-700 font-medium">متصل بقاعدة البيانات</span>
+                `;
+                connectionStatus.className = 'flex items-center space-x-2 bg-green-100 px-3 py-2 rounded-lg';
+                liveIndicator.className = 'w-3 h-3 bg-green-500 rounded-full pulse-green';
+            } else {
+                connectionStatus.innerHTML = `
+                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span class="text-red-700 font-medium">غير متصل</span>
+                `;
+                connectionStatus.className = 'flex items-center space-x-2 bg-red-100 px-3 py-2 rounded-lg';
+                liveIndicator.className = 'w-3 h-3 bg-red-500 rounded-full';
+            }
+        }
+
+        // Start listening to data
+        function startDataListening() {
+            if (!database) return;
+
+            // Listen to allDrivers
+            const driversRef = ref(database, 'allDrivers');
+            const driversUnsubscribe = onValue(driversRef, (snapshot) => {
+                const drivers = snapshot.val() || {};
+                updateDriversData(drivers);
+            }, (error) => {
+                console.error('Drivers data error:', error);
+                showNotification('خطأ في قراءة بيانات السائقين', 'error');
+            });
+            listenersMap.set('allDrivers', driversUnsubscribe);
+
+            // Listen to liveDrivers
+            const liveDriversRef = ref(database, 'liveDrivers');
+            const liveUnsubscribe = onValue(liveDriversRef, (snapshot) => {
+                const liveDrivers = snapshot.val() || {};
+                updateLiveDrivers(liveDrivers);
+            });
+            listenersMap.set('liveDrivers', liveUnsubscribe);
+
+            // Listen to rideRequests
+            const rideRequestsRef = ref(database, 'rideRequests');
+            const requestsUnsubscribe = onValue(rideRequestsRef, (snapshot) => {
+                const requests = snapshot.val() || {};
+                updateRideRequests(requests);
+            });
+            listenersMap.set('rideRequests', requestsUnsubscribe);
+        }
+
+        // Update drivers data
+        function updateDriversData(drivers) {
+            const driversArray = Object.entries(drivers);
+            const totalDrivers = driversArray.length;
+            
+            // Count online drivers
+            let onlineCount = 0;
+            const carTypeCounts = {};
+            const statusCounts = { online: 0, offline: 0, busy: 0 };
+
+            driversArray.forEach(([id, driver]) => {
+                // Count by status
+                const status = driver.newRideStatus || 'offline';
+                if (status === 'online') onlineCount++;
+                
+                statusCounts[status] = (statusCounts[status] || 0) + 1;
+
+                // Count by car type
+                const carType = driver.carType || 'غير محدد';
+                carTypeCounts[carType] = (carTypeCounts[carType] || 0) + 1;
+            });
+
+            // Update statistics
+            document.getElementById('totalDrivers').textContent = totalDrivers;
+            document.getElementById('onlineDrivers').textContent = onlineCount;
+
+            // Update table
+            updateDriversTable(driversArray);
+
+            // Update charts
+            updateCarTypesChart(carTypeCounts);
+            updateStatusChart(statusCounts);
+        }
+
+        // Update drivers table
+        function updateDriversTable(driversArray) {
+            const tbody = document.getElementById('driversTableBody');
+            tbody.innerHTML = '';
+
+            if (driversArray.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-user-slash text-3xl mb-4"></i>
+                            <p>لا يوجد سائقون مسجلون</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            driversArray.forEach(([driverId, driver]) => {
+                const status = driver.newRideStatus || 'offline';
+                const statusColor = status === 'online' ? 'green' : status === 'accepted' ? 'blue' : 'gray';
+                const statusText = status === 'online' ? 'متصل' : status === 'accepted' ? 'في رحلة' : 'غير متصل';
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${driver.name || 'غير محدد'}</div>
+                                <div class="text-sm text-gray-500">${driver.email || ''}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${driver.carType || 'غير محدد'}</div>
+                        <div class="text-sm text-gray-500">${driver.carColor || ''} - ${driver.carModel || ''}</div>
+                        <div class="text-sm text-gray-500">لوحة: ${driver.carNumber || 'غير محدد'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-${statusColor}-100 text-${statusColor}-800">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${driver.phone || 'غير محدد'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewDriver('${driverId}')" class="text-indigo-600 hover:text-indigo-900 ml-2">
+                            <i class="fas fa-eye"></i> عرض
+                        </button>
+                        <button onclick="contactDriver('${driver.phone}')" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-phone"></i> اتصال
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update live drivers
+        function updateLiveDrivers(liveDrivers) {
+            const container = document.getElementById('liveDriversList');
+            container.innerHTML = '';
+
+            const liveDriversArray = Object.entries(liveDrivers);
+            
+            if (liveDriversArray.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-car-slash text-4xl mb-4"></i>
+                        <p>لا يوجد سائقون متصلون حالياً</p>
+                    </div>
+                `;
+                return;
+            }
+
+            liveDriversArray.forEach(([driverId, location]) => {
+                if (location.l && location.l.length >= 2) {
+                    const driverCard = document.createElement('div');
+                    driverCard.className = 'flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg hover:shadow-md transition-shadow';
+                    driverCard.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-green-500 rounded-full pulse-green"></div>
+                            <div>
+                                <p class="font-medium text-gray-800">سائق: ${driverId.substr(0, 12)}...</p>
+                                <p class="text-sm text-gray-600">
+                                    <i class="fas fa-map-marker-alt ml-1"></i>
+                                    ${location.l[0].toFixed(4)}°, ${location.l[1].toFixed(4)}°
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-xs text-green-600 bg-green-100 px-3 py-1 rounded-full font-medium">
+                            <i class="fas fa-wifi ml-1"></i>
+                            متصل مباشر
+                        </div>
+                    `;
+                    container.appendChild(driverCard);
+                }
+            });
+        }
+
+        // Update ride requests
+        function updateRideRequests(requests) {
+            const requestsArray = Object.entries(requests);
+            const container = document.getElementById('rideRequestsList');
+            
+            document.getElementById('totalRequests').textContent = requestsArray.length;
+            
+            // Calculate total earnings
+            let totalEarnings = 0;
+            requestsArray.forEach(([id, request]) => {
+                if (request.fareAmount) {
+                    totalEarnings += parseFloat(request.fareAmount) || 0;
+                }
+            });
+            document.getElementById('totalEarnings').textContent = Math.round(totalEarnings).toLocaleString();
+            
+            container.innerHTML = '';
+            
+            if (requestsArray.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-route text-3xl mb-4"></i>
+                        <p>لا توجد طلبات رحلات</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show latest requests
+            const latestRequests = requestsArray.slice(-5).reverse();
+            
+            latestRequests.forEach(([requestId, request]) => {
+                const isWaiting = request.driverID === 'waiting';
+                const statusColor = isWaiting ? 'yellow' : 'green';
+                const statusText = isWaiting ? 'في الانتظار' : 'تم القبول';
+                
+                const requestCard = document.createElement('div');
+                requestCard.className = 'p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors';
+                requestCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-800 text-sm mb-1">
+                                <i class="fas fa-map-marker-alt text-green-500 ml-1"></i>
+                                ${request.pickUpAddress || 'نقطة انطلاق غير محددة'}
+                            </p>
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-flag-checkered text-red-500 ml-1"></i>
+                                ${request.dropOffAddress || 'وجهة غير محددة'}
+                            </p>
+                        </div>
+                        <div class="text-xs bg-${statusColor}-100 text-${statusColor}-700 px-2 py-1 rounded-full font-medium">
+                            ${statusText}
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500 pt-2 border-t border-gray-100">
+                        <span class="font-medium">
+                            <i class="fas fa-money-bill-wave text-green-500 ml-1"></i>
+                            ${request.fareAmount ? Math.round(request.fareAmount).toLocaleString() + ' ل.س' : 'لم يتم احتساب الأجرة'}
+                        </span>
+                        <span>
+                            <i class="fas fa-user-tie ml-1"></i>
+                            ${request.driverName || 'بدون سائق'}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(requestCard);
+            });
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Car Types Chart
+            const carTypesCtx = document.getElementById('carTypesChart').getContext('2d');
+            carTypesChart = new Chart(carTypesCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['لا توجد بيانات'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#E5E7EB']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            statusChart = new Chart(statusCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['متصل', 'غير متصل', 'في رحلة'],
+                    datasets: [{
+                        label: 'عدد السائقين',
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            '#10B981',
+                            '#6B7280',
+                            '#3B82F6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update car types chart
+        function updateCarTypesChart(carTypeCounts) {
+            const labels = Object.keys(carTypeCounts);
+            const data = Object.values(carTypeCounts);
+            
+            if (labels.length === 0) {
+                carTypesChart.data.labels = ['لا توجد بيانات'];
+                carTypesChart.data.datasets[0].data = [1];
+                carTypesChart.data.datasets[0].backgroundColor = ['#E5E7EB'];
+            } else {
+                carTypesChart.data.labels = labels;
+                carTypesChart.data.datasets[0].data = data;
+                carTypesChart.data.datasets[0].backgroundColor = [
+                    '#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444'
+                ];
+            }
+            carTypesChart.update();
+        }
+
+        // Update status chart
+        function updateStatusChart(statusCounts) {
+            statusChart.data.datasets[0].data = [
+                statusCounts.online || 0,
+                statusCounts.offline || 0,
+                statusCounts.accepted || 0
+            ];
+            statusChart.update();
+        }
+
+        // Refresh data
+        function refreshData() {
+            if (!isConnected) {
+                showNotification('يرجى الاتصال بقاعدة البيانات أولاً', 'warning');
+                return;
+            }
+            
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>تحديث...';
+            refreshBtn.disabled = true;
+            
+            setTimeout(() => {
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt ml-2"></i>تحديث';
+                refreshBtn.disabled = false;
+                showNotification('تم تحديث البيانات', 'success');
+            }, 1000);
+        }
+
+        // Logout function
+        window.logout = function() {
+            if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                // Clean up listeners
+                listenersMap.forEach((unsubscribe) => {
+                    if (typeof unsubscribe === 'function') {
+                        unsubscribe();
+                    }
+                });
+                
+                // Reset state
+                isConnected = false;
+                database = null;
+                app = null;
+                
+                // Redirect to login
+                window.location.href = 'login.html';
+            }
+        };
+
+        // Utility functions
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 left-4 ${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <i class="fas ${icons[type]} text-xl"></i>
+                    <span class="font-medium">${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Animate out and remove
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Global functions for table actions
+        window.viewDriver = function(driverId) {
+            showNotification(`عرض تفاصيل السائق: ${driverId.substr(0, 8)}...`, 'info');
+        };
+
+        window.contactDriver = function(phone) {
+            if (phone && phone !== 'غير محدد') {
+                window.open(`tel:${phone}`, '_self');
+            } else {
+                showNotification('رقم الهاتف غير متوفر', 'warning');
+            }
+        };
+
+        // Search and filter functionality
+        document.getElementById('searchDriver').addEventListener('input', filterTable);
+        document.getElementById('filterCarType').addEventListener('change', filterTable);
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchDriver').value.toLowerCase();
+            const carTypeFilter = document.getElementById('filterCarType').value;
+            const rows = document.querySelectorAll('#driversTableBody tr');
+
+            rows.forEach(row => {
+                if (row.cells.length < 5) return; // Skip empty state rows
+                
+                const driverName = row.cells[0].textContent.toLowerCase();
+                const carType = row.cells[1].textContent;
+                
+                const matchesSearch = driverName.includes(searchTerm);
+                const matchesCarType = !carTypeFilter || carType.includes(carTypeFilter);
+                
+                row.style.display = matchesSearch && matchesCarType ? '' : 'none';
+            });
+        }
+
+        // Auto-connect on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Show connection modal immediately
+            connectionModal.style.display = 'flex';
+            
+            // Auto-connect after a short delay
+            setTimeout(() => {
+                if (!isConnected) {
+                    connectToFirebase();
+                }
+            }, 1000);
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                refreshData();
+            }
+            if (e.key === 'Escape' && connectionModal.style.display === 'flex' && isConnected) {
+                connectionModal.style.display = 'none';
+            }
+        });
+
+        // Cleanup listeners on page unload
+        window.addEventListener('beforeunload', () => {
+            listenersMap.forEach((unsubscribe) => {
+                if (typeof unsubscribe === 'function') {
+                    unsubscribe();
+                }
+            });
+        });
+
+        // Export functions for debugging (only in development)
+        if (window.location.hostname === 'localhost') {
+            window.debugDashboard = {
+                isConnected: () => isConnected,
+                database: () => database,
+                showNotification: showNotification
+            };
+        }
+    </script>
+</body>
+</html>
